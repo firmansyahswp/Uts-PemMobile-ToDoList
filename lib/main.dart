@@ -33,8 +33,9 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   TextEditingController titleController = TextEditingController();
   TextEditingController contentController = TextEditingController();
   int? selectedIndex;
-  Color backgroundColor = Colors.white;
+  Color backgroundColor = const Color.fromARGB(255,255,255,255);
   ConfettiController confettiController = ConfettiController();
+  bool isLoading = false; // Menambahkan variabel isLoading
 
   void addNote() {
     String title = titleController.text;
@@ -42,16 +43,39 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
 
     if (title.isNotEmpty && content.isNotEmpty) {
       setState(() {
-        if (selectedIndex == null) {
-          notes.add(Note(title: title, content: content));
-        } else {
-          notes[selectedIndex!] = Note(title: title, content: content);
-          selectedIndex = null;
-        }
-        titleController.clear();
-        contentController.clear();
-        changeBackgroundColor();
-        confettiController.play();
+        isLoading = true; // Menampilkan indikator loading
+      });
+
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return Center(
+            child: SpinKitDoubleBounce(
+              color: Colors.blue,  // Warna indikator loading
+              size: 50.0,          // Ukuran indikator loading
+            ),
+          );
+        },
+      );
+
+      // Simulasikan proses penambahan catatan dengan penundaan
+      Future.delayed(Duration(seconds: 2), () {
+        setState(() {
+          if (selectedIndex == null) {
+            notes.add(Note(title: title, content: content));
+          } else {
+            notes[selectedIndex!] = Note(title: title, content: content);
+            selectedIndex = null;
+          }
+          titleController.clear();
+          contentController.clear();
+          changeBackgroundColor();
+          confettiController.play();
+          isLoading = false; // Menyembunyikan indikator loading setelah selesai
+        });
+
+        Navigator.of(context).pop(); // Tutup dialog indikator loading
       });
     }
   }
@@ -95,7 +119,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Catatan dengan Animasi"),
+        title: Text("To Do List Catatan"),
       ),
       body: AnimatedBackground(
         behaviour: RandomParticleBehaviour(),
@@ -146,7 +170,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
                 ),
               ),
               ElevatedButton(
-                onPressed: addNote,
+                onPressed: isLoading ? null : addNote, // Nonaktifkan tombol selama proses loading
                 style: ElevatedButton.styleFrom(
                   primary: Colors.blue,
                   onPrimary: Colors.white,
@@ -222,7 +246,7 @@ class _NotesScreenState extends State<NotesScreen> with SingleTickerProviderStat
         confettiController: confettiController,
         blastDirectionality: BlastDirectionality.explosive,
         shouldLoop: false,
-        colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple],
+        colors: const [Colors.green, Colors.blue, Colors.pink, Colors.orange, Colors.purple,Colors.indigo],
       ),
     );
   }
